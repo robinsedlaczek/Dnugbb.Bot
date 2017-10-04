@@ -18,12 +18,11 @@ namespace Dnugbb.Bot.Dialogs
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var activity = await result as Activity;
+            var reply = activity.CreateReply("...");
 
-            // calculate something for us to return
-            int length = (activity.Text ?? string.Empty).Length;
+            
 
-            // return our reply to the user
-            await context.PostAsync($"You sent {activity.Text} which was {length} characters");
+            await context.PostAsync(reply);
 
             context.Wait(MessageReceivedAsync);
         }
