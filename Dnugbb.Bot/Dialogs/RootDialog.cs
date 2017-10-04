@@ -10,6 +10,23 @@ namespace Dnugbb.Bot.Dialogs
     {
         public Task StartAsync(IDialogContext context)
         {
+            var options = new string[]
+            {
+                "Anstehende Treffen",
+                "Anmelden zu einem Treffen"
+            };
+
+            var descriptions = new string[]
+            {
+                "Anstehende Treffen",
+                "Anmelden zu einem Treffen"
+            };
+
+            var message = context.MakeMessage();
+            message.AddHeroCard("Bei folgenden Aktivitäten kann ich Dir helfen:", options, descriptions);
+                
+            context.PostAsync(message);
+
             context.Wait(MessageReceivedAsync);
 
             return Task.CompletedTask;
@@ -18,13 +35,12 @@ namespace Dnugbb.Bot.Dialogs
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var activity = await result as Activity;
-            var reply = activity.CreateReply("...");
+            var reply = activity.CreateReply(activity.Text);
 
+            //await context.PostAsync(reply);
+            context.Done(activity.Text);
             
-
-            await context.PostAsync(reply);
-
-            context.Wait(MessageReceivedAsync);
+            //context.Wait(MessageReceivedAsync);
         }
     }
 }

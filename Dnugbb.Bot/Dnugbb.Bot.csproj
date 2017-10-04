@@ -117,6 +117,13 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="iCal\CalendarParameter.cs" />
+    <Compile Include="iCal\CalendarParameters.cs" />
+    <Compile Include="iCal\ContentLine.cs" />
+    <Compile Include="iCal\ContentLineParameter.cs" />
+    <Compile Include="iCal\ContentLineParameters.cs" />
+    <Compile Include="iCal\vCalendar.cs" />
+    <Compile Include="iCal\vEvent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

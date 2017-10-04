@@ -47,8 +47,10 @@ Hi {activity.MembersAdded[0].Name}!{Environment.NewLine}
 Ich bin der Bot der .NET User Group Berlin-Brandenburg. Was kann ich für Dich tun?{Environment.NewLine}";
 
                 var reply = activity.CreateReply(message);
+
                 var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
                 await connector.Conversations.SendToConversationAsync(reply);
+                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
             }
             else if (activity.Type == ActivityTypes.ContactRelationUpdate)
             {
