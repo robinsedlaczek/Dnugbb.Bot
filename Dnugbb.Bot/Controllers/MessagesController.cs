@@ -5,6 +5,7 @@ using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System;
+using System.Linq;
 
 namespace Dnugbb.Bot
 {
@@ -20,6 +21,10 @@ namespace Dnugbb.Bot
             if (activity.Type == ActivityTypes.Message)
             {
                 await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+            }
+            else if (activity.Type==ActivityTypes.ConversationUpdate)
+            {
+                await HandleSystemMessage(activity);
             }
             else
             {
@@ -39,7 +44,7 @@ namespace Dnugbb.Bot
             }
             else if (activity.Type == ActivityTypes.ConversationUpdate)
             {
-                if (activity.MembersAdded.Count == 0)
+                if (activity.MembersAdded.Count == 0 || activity.MembersAdded.FirstOrDefault().Name.ToLower() == "bot")
                     return null;
 
                 var message = $@"
