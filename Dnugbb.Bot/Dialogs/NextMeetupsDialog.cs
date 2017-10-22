@@ -6,6 +6,7 @@ using System.Net.Http;
 using Dnugbb.Bot.iCal;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Dnugbb.Bot.Dialogs
 {
@@ -23,28 +24,40 @@ namespace Dnugbb.Bot.Dialogs
 
             foreach (var meetup in calendar.vEvents)
             {
-                DateTime start;
-                string startTime = string.Empty;
+                DateTime startTime;
+                var startTimestamp = meetup.ContentLines.Where(line => line.Key.ToLower() == "dtstart").FirstOrDefault().Value.Value;
 
-                if (DateTime.TryParse(meetup.ContentLines.Where(line => line.Key.ToLower() == "dtstart").FirstOrDefault().Value.Value, out start))
-                    startTime = start.ToString("dd.MM.yyyy hh:mm");
+                if (!DateTime.TryParseExact(startTimestamp, "yyyyMMddTHHmmssZ", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out startTime))
+                    continue;
+
+                var meetupUrl = meetup.ContentLines.Where(line => line.Key.ToLower() == "url").FirstOrDefault().Value.Value;
+                var subTitle = startTime.ToString("dd.MM.yyyy hh:mm") + " | "
+                                + meetup.ContentLines.Where(line => line.Key.ToLower() == "location").FirstOrDefault().Value.Value;
+
+                var title = meetup.ContentLines.Where(line => line.Key.ToLower() == "summary").FirstOrDefault().Value.Value;
+
+                var description = meetup.ContentLines.Where(line => line.Key.ToLower() == "description").FirstOrDefault().Value.Value;
+
+                var metadata = description.Split('\n');
+
+                var referent = metadata.GetValue(metadata.Length - 2);
+                //var referent = (description.Substring(description.IndexOf("Referent:") + 9, description.IndexOf("Image:") - (description.IndexOf("Referent:") + 9))).Trim();
+                var imageUrl = description.Substring(description.IndexOf("Image:") + 6, description.Length - (description.IndexOf("Referent:") + 6) - 1);
 
                 var heroCard = new HeroCard()
                 {
-                    Title = meetup.ContentLines.Where(line => line.Key.ToLower() == "summary").FirstOrDefault().Value.Value,
-                    Subtitle = startTime
-                                + " | "
-                                + meetup.ContentLines.Where(line => line.Key.ToLower() == "location").FirstOrDefault().Value.Value,
-                    Text = meetup.ContentLines.Where(line => line.Key.ToLower() == "description").FirstOrDefault().Value.Value,
+                    Title = title,
+                    Subtitle = subTitle,
+                    Text = description,
 
-                    //Images = new List<CardImage>
-                    //{
-                    //    new CardImage(nextEvent.SpeakerImage)
-                    //},
+                    Images = new List<CardImage>
+                    {
+                        new CardImage(imageUrl)
+                    },
 
                     Buttons = new List<CardAction>
                     {
-                        new CardAction(type: ActionTypes.OpenUrl, title: "Jetzt anmelden", value: meetup.ContentLines.Where(line => line.Key.ToLower() == "url").FirstOrDefault().Value.Value)
+                        new CardAction(type: ActionTypes.OpenUrl, title: "Zur Event-Website", value: meetupUrl)
                     }
                 };
 
