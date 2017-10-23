@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Dnugbb.Bot.Dialogs
 {
@@ -15,20 +13,25 @@ namespace Dnugbb.Bot.Dialogs
             var options = new string[]
             {
                 "Anstehende Treffen",
-                "Anmelden zu einem Treffen"
+                "Anmelden zu einem Treffen",
+                "Organisator(en) kontaktieren"
             };
     
             var descriptions = new string[]
             {
                 "Anstehende Treffen",
-                "Anmelden zu einem Treffen"
+                "Anmelden zu einem Treffen",
+                "Organisator(en) kontaktieren"
             };
 
             var message = context.MakeMessage();
-            message.AddHeroCard("Bei folgenden Aktivitäten kann ich Dir helfen:", options, descriptions);
+            message.Text = "Bei folgenden Aktivitäten kann ich Dir helfen:";
             message.Speak = "Bei folgenden Aktivitäten kann ich Dir helfen:";
-
             await context.PostAsync(message);
+
+            var possibleActivitiesMessage = context.MakeMessage();
+            possibleActivitiesMessage.AddHeroCard(string.Empty, options, descriptions);
+            await context.PostAsync(possibleActivitiesMessage);
 
             context.Wait(MessageReceivedAsync);
         }
@@ -43,9 +46,13 @@ namespace Dnugbb.Bot.Dialogs
             }
             else if (activity.Text.ToLower().Contains("anstehende treffen"))
             {
-                await context.Forward(new NextMeetupDialog(), ResumeAfterNextMeetupDialog, activity);
+                await context.Forward(new NextMeetupsDialog(), ResumeAfterNextMeetupDialog, activity);
             }
             else if (activity.Text.ToLower().Contains("anmelden zu einem treffen"))
+            {
+                context.Wait(MessageReceivedAsync);
+            }
+            else if (activity.Text.ToLower().Contains("organisator(en) kontaktieren"))
             {
                 context.Wait(MessageReceivedAsync);
             }

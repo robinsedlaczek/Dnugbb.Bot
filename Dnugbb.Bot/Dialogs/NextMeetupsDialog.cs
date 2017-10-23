@@ -11,7 +11,7 @@ using System.Globalization;
 namespace Dnugbb.Bot.Dialogs
 {
     [Serializable]
-    public class NextMeetupDialog : IDialog<object>
+    public class NextMeetupsDialog : IDialog<object>
     {
         public async Task StartAsync(IDialogContext context)
         {
@@ -31,8 +31,6 @@ namespace Dnugbb.Bot.Dialogs
                     continue;
 
                 var meetupUrl = meetup.ContentLines.Where(line => line.Key.ToLower() == "url").FirstOrDefault().Value.Value;
-                var subTitle = startTime.ToString("dd.MM.yyyy hh:mm") + " | "
-                                + meetup.ContentLines.Where(line => line.Key.ToLower() == "location").FirstOrDefault().Value.Value;
 
                 var title = meetup.ContentLines.Where(line => line.Key.ToLower() == "summary").FirstOrDefault().Value.Value;
 
@@ -40,16 +38,29 @@ namespace Dnugbb.Bot.Dialogs
 
                 var metadata = description.Split('\n');
 
-                var referent = metadata.GetValue(metadata.Length - 2);
-                //var referent = (description.Substring(description.IndexOf("Referent:") + 9, description.IndexOf("Image:") - (description.IndexOf("Referent:") + 9))).Trim();
-                var imageUrl = description.Substring(description.IndexOf("Image:") + 6, description.Length - (description.IndexOf("Referent:") + 6) - 1);
+                var excerpt = string.Join("\r\n \r\n", metadata.TakeWhile(entry => !entry.StartsWith("Referent:") && !entry.StartsWith("Image:")));
+
+                var referent = metadata.Where(entry => entry.StartsWith("Referent:")).FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(referent))
+                    referent = referent.Substring("Referent:".Length).Trim();
+
+                var imageUrl = metadata.Where(entry => entry.StartsWith("Image:")).FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(imageUrl))
+                    imageUrl = imageUrl.Substring("Image:".Length).Trim();
+
+                var subTitle =
+                    referent
+                    + " | " + startTime.ToString("dd.MM.yyyy hh:mm")
+                    + " | " + meetup.ContentLines.Where(line => line.Key.ToLower() == "location").FirstOrDefault().Value.Value;
 
                 var heroCard = new HeroCard()
                 {
                     Title = title,
                     Subtitle = subTitle,
-                    Text = description,
-
+                    Text = excerpt,
+                    
                     Images = new List<CardImage>
                     {
                         new CardImage(imageUrl)
@@ -59,12 +70,11 @@ namespace Dnugbb.Bot.Dialogs
                     {
                         new CardAction(type: ActionTypes.OpenUrl, title: "Zur Event-Website", value: meetupUrl)
                     }
+                    
                 };
 
                 message.Attachments.Add(heroCard.ToAttachment());
             }
-
-
 
             await context.PostAsync(message);
 
@@ -74,14 +84,14 @@ namespace Dnugbb.Bot.Dialogs
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
         {
             var activity = await result as Activity;
+            var reply = activity.CreateReply("Was kann ich noch für Dich tun?");
 
-            if (activity.Text.Contains("exit"))
-            {
-                context.Done(string.Empty);
-                return;
-            }
+            await context.PostAsync(reply);
 
-            context.Wait(MessageReceivedAsync);
+            // [RS] Nothing to do currently.
+            context.Done(string.Empty);
+
+            //context.Wait(MessageReceivedAsync);
         }
     }
 }
